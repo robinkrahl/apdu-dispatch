@@ -1,4 +1,7 @@
-pub use iso7816::{Command, Data, Interface, Status};
+pub use iso7816::{Interface, Status};
+use super::Data;
+pub type Command<const N: usize> = iso7816::Command<Data<N>>;
+pub type Response<const N: usize> = iso7816::Response<Data<N>>;
 pub type Result = iso7816::Result<()>;
 
 /// An App can receive and respond APDUs at behest of the ApduDispatch.

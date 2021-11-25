@@ -10,7 +10,7 @@
 //!
 use core::convert::TryInto;
 use crate::App;
-use crate::{Command, response, interchanges};
+use crate::{Command, app, response, interchanges};
 use crate::command::SIZE as CommandSize;
 use crate::response::SIZE as ResponseSize;
 
@@ -45,7 +45,7 @@ struct ApduBuffer {
 }
 
 impl ApduBuffer {
-    fn request<const S: usize>(&mut self, command: &iso7816::Command<S>) {
+    fn request<const S: usize>(&mut self, command: &app::Command<S>) {
         match &mut self.raw {
             RawApduBuffer::Request(buffered) => {
                 buffered.extend_from_command(command).ok();
@@ -81,7 +81,7 @@ pub struct ApduDispatch {
 
 impl ApduDispatch
 {
-    fn apdu_type<const S: usize>(apdu: &iso7816::Command<S>) -> RequestType {
+    fn apdu_type<const S: usize>(apdu: &app::Command<S>) -> RequestType {
         info!("instruction: {:?} {}", apdu.instruction(), apdu.p1);
         if apdu.instruction() == Instruction::Select && (apdu.p1 & 0x04) != 0 {
             // RequestType::Select(Aid::try_from_slice(apdu.data()).unwrap())
@@ -149,7 +149,7 @@ impl ApduDispatch
 
 
     #[inline(never)]
-    fn buffer_chained_apdu_if_needed<const S: usize>(&mut self, command: iso7816::Command<S>, interface: Interface) -> RequestType {
+    fn buffer_chained_apdu_if_needed<const S: usize>(&mut self, command: app::Command<S>, interface: Interface) -> RequestType {
 
         self.current_interface = interface;
         // iso 7816-4 5.1.1
@@ -206,7 +206,7 @@ impl ApduDispatch
     }
 
     fn parse_apdu<const S: usize>(message: &interchanges::Data)
-    -> Result<iso7816::Command<S>> {
+    -> Result<app::Command<S>> {
 
         debug!(">> {}", hex_str!(message.as_slice(), sep:""));
         match iso7816::Command::try_from(message) {
